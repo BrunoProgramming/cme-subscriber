@@ -19,10 +19,10 @@ script:
   - export CXX=/usr/bin/g++-6
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
-  # Run build 
+  # Run build
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
-  # Run build 
+  # Run build
   - mkdir build
   - cd build
   - cmake .. && make
