@@ -3,6 +3,22 @@ project(cpp_cme_subscriber)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# imported library
+add_library(sbe STATIC IMPORTED)
+set_property(TARGET sbe PROPERTY IMPORTED_LOCATION /usr/local/lib/libsbe.a)
+set_property(TARGET sbe PROPERTY INTERFACE_INCLUDE_DIRECTORIES /usr/local/include/sbe)
+
+set(BOOST_ROOT /usr/local/boost_1_63_0)
+set(BOOST_INCLUDEDIR /usr/include)
+
+set(BOOST_LIBRARYDIR /usr/lib/x86_64-linux-gnu)
+
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+
+find_package(Boost COMPONENTS system thread)
+include_directories( ${Boost_INCLUDE_DIRS})
+
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -42,4 +58,4 @@ add_subdirectory(test)
 set(SOURCE_FILES
         main.cpp)
 add_executable(cpp_cme_subscriber ${SOURCE_FILES})
-target_link_libraries(cpp_cme_subscriber DepthBook)
+target_link_libraries(cpp_cme_subscriber DepthBook ${Boost_LIBRARIES} sbe)

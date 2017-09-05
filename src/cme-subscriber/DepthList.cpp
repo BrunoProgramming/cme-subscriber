@@ -9,12 +9,12 @@ DepthList::DepthList(const bool& isBuy)
         , isBuy(isBuy)
         , updateCount(0)
 {
-    entries.reserve(maxDepthSupported);
+    entries_.reserve(maxDepthSupported);
 }
 
 DepthList::DepthList(const DepthList& rhs)
 {
-    // create *new* entries
+    // create *new* entries_
     // default would simply increment reference count on shared_pointer
     for (auto e : rhs.getEntries()) {
         e = std::make_unique<PriceEntry>(*e);
@@ -23,7 +23,7 @@ DepthList::DepthList(const DepthList& rhs)
 
 DepthList& DepthList::operator=(const DepthList& rhs)
 {
-    // create *new* entries
+    // create *new* entries_
     // default would simply increment reference count on shared_pointer
     for (auto e : rhs.getEntries()) {
         e = std::make_unique<PriceEntry>(*e);
@@ -36,7 +36,7 @@ void DepthList::remove(int level, double price)
     if ((level < maxDepthKnown)
         && (byPrice.find(price) != byPrice.end())) // validate price exists in map
     {
-        entries.erase(entries.begin() + level);
+        entries_.erase(entries_.begin() + level);
         byPrice.erase(price);
         --maxDepthKnown;
     } else {
@@ -56,21 +56,21 @@ void DepthList::insert(double price, int quantity, int levelIndex, MDEntryType u
         // ADD
     else if (updateType == New) {
         if (level < maxDepthKnown + 1) {
-            if ((level < maxDepthKnown) && (entries[level]->price == price)) {
+            if ((level < maxDepthKnown) && (entries_[level]->price == price)) {
                 std::cout << "Depth Item at new price already exists: Level=" << level << " - Price=" << price
                           << std::endl;
             } else {
 
                 // update book entry
                 auto e = std::make_shared<PriceEntry>(price, quantity);
-                entries.insert(entries.begin() + level, e);
+                entries_.insert(entries_.begin() + level, e);
                 byPrice[price] = e.get();
 
                 // implicit removal of last level in book
                 // if size of book has exceeded max due to recent insert
-                if (entries.size() == maxDepthSupported + 1) {
-                    byPrice.erase(entries[maxDepthSupported]->price);
-                    entries.erase(entries.begin() + maxDepthSupported);
+                if (entries_.size() == maxDepthSupported + 1) {
+                    byPrice.erase(entries_[maxDepthSupported]->price);
+                    entries_.erase(entries_.begin() + maxDepthSupported);
                     --maxDepthKnown;
                 }
                 ++updateCount;
@@ -88,9 +88,9 @@ void DepthList::insert(double price, int quantity, int levelIndex, MDEntryType u
         if (level < maxDepthKnown) {
 
             // update book entry
-            if (entries[level]->price == price) {
+            if (entries_[level]->price == price) {
                 // implicit update of entry in byPrice map due to shared pointer
-                entries[level]->quantity = quantity;
+                entries_[level]->quantity = quantity;
                 ++updateCount;
             } else {
                 std::cout << "Depth Item at given price for modification does not exist : " << price << std::endl;
@@ -105,8 +105,8 @@ void DepthList::insert(double price, int quantity, int levelIndex, MDEntryType u
 
 PriceEntry DepthList::getBestEntry()
 {
-    if (this->entries.size() > 0) {
-        return *(entries[0]);
+    if (this->entries_.size() > 0) {
+        return *(entries_[0]);
     }
     return PriceEntry{ 0, 0 };
 }

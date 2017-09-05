@@ -28,13 +28,11 @@ struct PriceEntry {
 class DepthList {
 
 private:
-    std::vector<std::shared_ptr<PriceEntry> > entries;
-    std::map<double, PriceEntry* > byPrice;
+    std::vector<PriceEntry> entries_;
+    bool isbuy_;
 
     int maxDepthSupported = 10; // mve to constructor
     int maxDepthKnown = 0;
-
-    bool isBuy;
 
     int updateCount;
 
@@ -49,16 +47,14 @@ public:
     void insert(double, int, int, MDEntryType);
     PriceEntry getBestEntry();
 
-    const std::vector<std::shared_ptr<PriceEntry> >& getEntries() const
+    const std::vector<PriceEntry>& getEntries() const
     {
-        return entries;
+        return entries_;
     }
-
-    int getMaxDepthSupported() const { return maxDepthSupported; }
 
     void reset()
     {
-        entries.clear();
+        entries_.clear();
         maxDepthKnown = 0;
         clear();
     }
