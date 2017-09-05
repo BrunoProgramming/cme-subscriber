@@ -9,8 +9,15 @@
 
 constexpr int BYTE_OFFSET = 12;
 
+void CMESubscriber::CMESubscriber(CMEFeed feed): feed_(feed) {
+    feed_.AddDataHandler(OnData);
+    feed_.JoinIncremental();
+    StartRecovery();
+}
+
 void CMESubscriber::OnData(char* buffer, size_t bytes_recvd) {
 
+    // Need to handle multiple packets chunked into a single message
     int bytes_processed = BYTE_OFFSET;
     while (bytes_processed < bytes_recvd) {
 
@@ -51,64 +58,25 @@ void CMESubscriber::HandleIncremental(MDIncrementalRefreshBook32& incremental) {
 void CMESubscriber::HandleSnapshot(MDIncrementalRefreshOrderBook43& refresh) {
     if(!InRecoveryMode()) { return; } // handle race whereby inflight packets may arrivae after recovery was successful
 
-    refresh.rp
+    book_.Clear();
 
+    // need to handle chunked packets
+    // where multiple messages have been submitted over wire
+    expected_seqnum_ = MDIncrementalRefreshOrderBook43.LastMsgSeqNumProcessed() + 1;
 
-}
-
-
-
-    header
-    auto seqnum = decoder_;//.SeqNum(data);
-
-    // Incremental
-    for (auto i&: decoder_.GetEntries()) {
-
-        if (i.SeqNum() == NextExpectedIncremental()) {
-            if (!InRecoveryMode()) {
-                ProcessIncremental();
-            }
-            ++incremental_seqnum_;
-        } else if (i.SeqNum() > NextExpectedIncremental() && !InRecoveryMode()) {
-            StartRecovery();
-        }
+    auto &entry = incremental.noMDEntries();
+    while(entry.hasNext()) {
+        entry.next();
+        book_.HandleMDEntry(entry.mDUpdateAction(),
+                            entry.mDEntryType(),
+                            entry.mDEntryPx(),
+                            entry.mDEntrySize());
     }
-
-    // Snapshot
-    for (auto i& decoder_.GetEntries()) {
-        ProcessSnapshot();
-        if (Recovered()) {
-            StopRecovery();
-        }
-    }
-}
-
-void CMESubscriber::HandleIncremental(...) {
-
-    incremental_seqnum_ = i.GetSeqNum();
-
-    switch (i.Type) {
-        case Insert:
-            book_.insert();
-            break;
-    }
-
-}
-
-void CMESubscriber::ProcessSnapshot() {
-
-}
-
-bool CMESubscriber::Recovered() {
-    return (incremental_seqnum_ != snapshot_seqnum_);
-}
-
-int CMESubscriber::NextExpectedIncremental() {
-   return incremental_seqnum_+1;
 }
 
 void CMESubscriber::StartRecovery() {
-    feed_.join();
+    recovering_ = true;
+    feed_.JoinSnapshot();
     // consider publishing unreliable book to handler
 }
 

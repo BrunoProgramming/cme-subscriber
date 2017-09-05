@@ -21,19 +21,20 @@ private:
 
     DepthBook book_;
     CMEDecoder decoder_;
+    CMEFeed feed_;
 
     int expected_seqnum_;
-    bool recovery_mode_;
+    bool recovering_;
 
     void OnData(size_t);
     bool InRecoveryMode();
     void StartRecovery();
     void StopRecovery();
-    void JoinIncremental();
-    void LeaveIncremental();
+    void JoinIncremental(); // move to feed
+    void LeaveIncremental(); // move to feed
     void HandleIncremental(MDIncrementalRefreshBook32&);
-    void JoinSnapshot();
-    void LeaveSnapshot();
+    void JoinSnapshot(); // move to feed
+    void LeaveSnapshot(); // move to feed
     void HandleSnapshot();
 };
 
